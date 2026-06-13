@@ -32,17 +32,22 @@ def get_unread_messages(channel_ids: list[str] | None = None, hours_back: int = 
             channel_ids = [c["id"] for c in result["channels"]]
 
         for channel_id in channel_ids:
-            history = client.conversations_history(
-                channel=channel_id, oldest=str(oldest), limit=50
-            )
-            for msg in history.get("messages", []):
-                messages.append({
-                    "channel": channel_id,
-                    "user": msg.get("user", "unknown"),
-                    "text": msg.get("text", ""),
-                    "ts": msg.get("ts", ""),
-                    "thread_ts": msg.get("thread_ts"),
-                })
+            try:
+                history = client.conversations_history(
+                    channel=channel_id, oldest=str(oldest), limit=50
+                )
+                for msg in history.get("messages", []):
+                    messages.append({
+                        "channel": channel_id,
+                        "user": msg.get("user", "unknown"),
+                        "text": msg.get("text", ""),
+                        "ts": msg.get("ts", ""),
+                        "thread_ts": msg.get("thread_ts"),
+                    })
+            except SlackApiError as e:
+                # Skip channels where bot lacks access (not_in_channel, channel_not_found, etc.)
+                continue
+
     except SlackApiError as e:
         return [{"error": str(e)}]
 
