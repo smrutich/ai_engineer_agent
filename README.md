@@ -91,14 +91,16 @@ pip install -e .
 
 ```bash
 cp .env.example .env
-# Fill in your API keys:
+# Required for v1:
 #   - OPENAI_API_KEY
 #   - ANTHROPIC_API_KEY
-#   - SLACK_BOT_TOKEN + SLACK_USER_ID
-#   - MS_GRAPH_CLIENT_ID/SECRET/TENANT_ID (for Outlook)
+#   - SLACK_BOT_TOKEN + SLACK_APP_TOKEN + SLACK_USER_ID
 #   - GITHUB_TOKEN
-#   - JIRA_BASE_URL + JIRA_EMAIL + JIRA_API_TOKEN
-#   - SNOWFLAKE_* credentials
+#
+# Optional (enable when integrations are ready):
+#   - MS_GRAPH_* (Outlook/Calendar)
+#   - JIRA_* (ticket tracking)
+#   - SNOWFLAKE_* (data agent)
 ```
 
 ### 3. Configure Cron (optional)
