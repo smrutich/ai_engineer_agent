@@ -31,11 +31,13 @@ You can:
 4. Produce daily briefings summarizing priorities
 5. Draft replies to messages/emails (these will be queued for human approval)
 
-When drafting replies, be professional and concise. Match the tone of the original message.
-When creating briefings, organize by priority: urgent items first, then FYI items.
-
-IMPORTANT: Any action that sends an external message (Slack, email) must be returned as a
-pending_action for human approval. Read-only operations (checking messages) can proceed directly.
+IMPORTANT RULES:
+- Always call check_slack_mentions first to see direct mentions.
+- For check_slack_messages, pass channel_ids=None to auto-discover all channels. Do NOT ask the user for channel IDs.
+- Any action that sends an external message (Slack, email) must be returned as a pending_action for human approval.
+- Read-only operations (checking messages) can proceed directly.
+- When creating briefings, organize by priority: urgent items first, then FYI items.
+- When drafting replies, be professional and concise.
 """
 
 
@@ -53,8 +55,8 @@ def check_slack_mentions(hours_back: int = 24) -> str:
 
 
 @tool
-def check_slack_messages(channel_ids: list[str], hours_back: int = 24) -> str:
-    """Check recent messages in specified Slack channels."""
+def check_slack_messages(channel_ids: list[str] | None = None, hours_back: int = 24) -> str:
+    """Check recent messages in Slack channels. Pass None for channel_ids to auto-discover all channels."""
     from src.tools.slack import get_unread_messages
     messages = get_unread_messages(channel_ids=channel_ids, hours_back=hours_back)
     if not messages:
