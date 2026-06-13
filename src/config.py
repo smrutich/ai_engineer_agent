@@ -15,8 +15,8 @@ class LLMConfig:
     anthropic_api_key: str = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))
     # Model assignments per agent role
     code_model: str = "gpt-4o"  # Builder agent — code generation
-    reasoning_model: str = "claude-sonnet-4-20250514"  # Solutions agent — architecture
-    summarization_model: str = "claude-sonnet-4-20250514"  # Comms agent — long context
+    reasoning_model: str = "claude-haiku-4-5-20251001"  # Solutions agent — architecture
+    summarization_model: str = "claude-haiku-4-5-20251001"  # Comms agent — long context
     sql_model: str = "gpt-4o"  # Data agent — SQL and dbt
 
 
