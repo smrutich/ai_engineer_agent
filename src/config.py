@@ -23,6 +23,7 @@ class LLMConfig:
 @dataclass
 class SlackConfig:
     bot_token: str = field(default_factory=lambda: os.getenv("SLACK_BOT_TOKEN", ""))
+    user_token: str = field(default_factory=lambda: os.getenv("SLACK_USER_TOKEN", ""))
     app_token: str = field(default_factory=lambda: os.getenv("SLACK_APP_TOKEN", ""))
     user_id: str = field(default_factory=lambda: os.getenv("SLACK_USER_ID", ""))
 

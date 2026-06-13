@@ -10,7 +10,13 @@ from src.config import settings
 
 
 def get_client() -> WebClient:
+    """Bot token client — for channel history, posting messages."""
     return WebClient(token=settings.slack.bot_token)
+
+
+def get_user_client() -> WebClient:
+    """User token client — for search (requires search:read scope)."""
+    return WebClient(token=settings.slack.user_token)
 
 
 def get_unread_messages(channel_ids: list[str] | None = None, hours_back: int = 24) -> list[dict]:
@@ -44,9 +50,13 @@ def get_unread_messages(channel_ids: list[str] | None = None, hours_back: int = 
 
 
 def get_mentions(hours_back: int = 24) -> list[dict]:
-    """Search for messages that mention the configured user."""
-    client = get_client()
+    """Search for messages that mention the configured user (requires user token)."""
     user_id = settings.slack.user_id
+
+    if not settings.slack.user_token:
+        return [{"error": "SLACK_USER_TOKEN not configured. User token with search:read scope is required for mention search."}]
+
+    client = get_user_client()
     oldest = (datetime.now() - timedelta(hours=hours_back)).timestamp()
 
     try:
