@@ -45,26 +45,36 @@ IMPORTANT RULES:
 def check_slack_mentions(hours_back: int = 24) -> str:
     """Check Slack for recent mentions of the user."""
     from src.tools.slack import get_mentions
-    mentions = get_mentions(hours_back=hours_back)
-    if not mentions:
-        return "No new Slack mentions in the last {hours_back} hours."
-    lines = [f"Found {len(mentions)} mention(s):"]
-    for m in mentions:
-        lines.append(f"  - From {m['user']}: {m['text'][:100]}")
-    return "\n".join(lines)
+    try:
+        mentions = get_mentions(hours_back=hours_back)
+        if not mentions:
+            return f"No new Slack mentions in the last {hours_back} hours."
+        if "error" in mentions[0]:
+            return f"Slack API error: {mentions[0]['error']}"
+        lines = [f"Found {len(mentions)} mention(s):"]
+        for m in mentions:
+            lines.append(f"  - From {m.get('user', 'unknown')}: {m.get('text', '')[:100]}")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error checking Slack mentions: {e}"
 
 
 @tool
 def check_slack_messages(channel_ids: list[str] | None = None, hours_back: int = 24) -> str:
     """Check recent messages in Slack channels. Pass None for channel_ids to auto-discover all channels."""
     from src.tools.slack import get_unread_messages
-    messages = get_unread_messages(channel_ids=channel_ids, hours_back=hours_back)
-    if not messages:
-        return "No new messages."
-    lines = [f"Found {len(messages)} message(s):"]
-    for m in messages[:20]:
-        lines.append(f"  [{m['channel']}] {m['user']}: {m['text'][:80]}")
-    return "\n".join(lines)
+    try:
+        messages = get_unread_messages(channel_ids=channel_ids, hours_back=hours_back)
+        if not messages:
+            return "No new messages."
+        if "error" in messages[0]:
+            return f"Slack API error: {messages[0]['error']}"
+        lines = [f"Found {len(messages)} message(s):"]
+        for m in messages[:20]:
+            lines.append(f"  [{m.get('channel', '?')}] {m.get('user', 'unknown')}: {m.get('text', '')[:80]}")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error checking Slack messages: {e}"
 
 
 @tool
