@@ -180,16 +180,15 @@ def executor_node(state: AgentState) -> dict:
 
 def _execute_action(action: PendingAction) -> str:
     """Dispatch an approved action to the appropriate tool."""
-    from src.tools.slack import send_slack_message
-    from src.tools.outlook import send_email
-    from src.tools.github import create_pr
-
     match action.action_type:
         case "slack_message":
+            from src.tools.slack import send_slack_message
             return send_slack_message(**action.payload)
         case "email_send":
+            from src.tools.outlook import send_email
             return send_email(**action.payload)
         case "github_pr":
+            from src.tools.github import create_pr
             return create_pr(**action.payload)
         case _:
             return f"Unknown action type: {action.action_type}"

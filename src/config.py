@@ -36,6 +36,10 @@ class OutlookConfig:
         default_factory=lambda: os.getenv("MS_GRAPH_REDIRECT_URI", "http://localhost:8000/callback")
     )
 
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.client_id and self.tenant_id)
+
 
 @dataclass
 class GitHubConfig:
@@ -47,6 +51,10 @@ class JiraConfig:
     base_url: str = field(default_factory=lambda: os.getenv("JIRA_BASE_URL", ""))
     email: str = field(default_factory=lambda: os.getenv("JIRA_EMAIL", ""))
     api_token: str = field(default_factory=lambda: os.getenv("JIRA_API_TOKEN", ""))
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.base_url and self.api_token)
 
 
 @dataclass

@@ -112,16 +112,25 @@ def check_jira_tickets(status: str | None = None) -> str:
     return "\n".join(lines)
 
 
-COMMS_TOOLS = [check_slack_mentions, check_slack_messages, check_outlook_inbox, check_calendar, check_jira_tickets]
+def get_comms_tools() -> list:
+    """Build tool list based on which integrations are configured."""
+    from src.config import settings
+    tools = [check_slack_mentions, check_slack_messages]
+    if settings.outlook.is_configured:
+        tools.extend([check_outlook_inbox, check_calendar])
+    if settings.jira.is_configured:
+        tools.append(check_jira_tickets)
+    return tools
 
 
 def run_comms_agent(state: AgentState) -> dict:
     """Execute the communications agent."""
+    tools = get_comms_tools()
     llm = ChatAnthropic(
         model=settings.llm.summarization_model,
         api_key=settings.llm.anthropic_api_key,
     )
-    llm_with_tools = llm.bind_tools(COMMS_TOOLS)
+    llm_with_tools = llm.bind_tools(tools)
 
     messages = [SystemMessage(content=COMMS_SYSTEM_PROMPT)] + list(state["messages"])
 
@@ -137,7 +146,7 @@ def run_comms_agent(state: AgentState) -> dict:
         # Execute tool calls
         from langchain_core.messages import ToolMessage
         for tc in response.tool_calls:
-            tool_fn = next((t for t in COMMS_TOOLS if t.name == tc["name"]), None)
+            tool_fn = next((t for t in tools if t.name == tc["name"]), None)
             if tool_fn:
                 result = tool_fn.invoke(tc["args"])
                 messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
