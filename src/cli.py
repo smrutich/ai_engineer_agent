@@ -22,17 +22,17 @@ from rich.markdown import Markdown
 from langchain_core.messages import HumanMessage
 
 from src.config import settings
-from src.graph import app
+from src.graph import app as graph
 from src.state import ActionStatus
 
-cli = typer.Typer(name="ai-engineer", help="AI Engineer Multi-Agent System")
+app = typer.Typer(name="ai-engineer", help="AI Engineer Multi-Agent System")
 console = Console()
 
 # Thread config for LangGraph checkpointing
 DEFAULT_THREAD = {"configurable": {"thread_id": "main"}}
 
 
-@cli.command()
+@app.command()
 def briefing(hours_back: int = typer.Option(24, help="Hours to look back")):
     """Generate a daily briefing from all communication channels."""
     console.print(Panel("[bold]Daily Briefing[/bold]", style="blue"))
@@ -43,7 +43,7 @@ def briefing(hours_back: int = typer.Option(24, help="Hours to look back")):
         "Organize by: (1) Urgent/action-needed items, (2) FYI/updates, (3) Upcoming meetings/deadlines."
     )
 
-    result = app.invoke({"messages": [input_msg]}, config=DEFAULT_THREAD)
+    result = graph.invoke({"messages": [input_msg]}, config=DEFAULT_THREAD)
 
     # Display the result
     final_msg = result["messages"][-1]
@@ -55,13 +55,13 @@ def briefing(hours_back: int = typer.Option(24, help="Hours to look back")):
         console.print(f"\n[yellow]⚠ {len(pending)} pending action(s) need approval. Run 'ai-engineer approve'.[/yellow]")
 
 
-@cli.command()
+@app.command()
 def task(description: str = typer.Argument(..., help="Task description")):
     """Route a task to the appropriate specialist agent."""
     console.print(Panel(f"[bold]Task:[/bold] {description}", style="green"))
 
     input_msg = HumanMessage(content=description)
-    result = app.invoke({"messages": [input_msg]}, config=DEFAULT_THREAD)
+    result = graph.invoke({"messages": [input_msg]}, config=DEFAULT_THREAD)
 
     # Display which agent handled it
     target = result.get("target_agent")
@@ -77,13 +77,13 @@ def task(description: str = typer.Argument(..., help="Task description")):
         console.print(f"\n[yellow]⚠ {len(pending)} pending action(s) need approval. Run 'ai-engineer approve'.[/yellow]")
 
 
-@cli.command()
+@app.command()
 def approve():
     """Review and approve/reject pending actions."""
     actions_path = Path(settings.pending_actions_path)
 
     # Get current state from checkpointer
-    state = app.get_state(DEFAULT_THREAD)
+    state = graph.get_state(DEFAULT_THREAD)
     pending = [a for a in state.values.get("pending_actions", []) if a.status == ActionStatus.PENDING]
 
     if not pending:
@@ -109,19 +109,19 @@ def approve():
     )
 
     # Resume the graph with the human decision
-    app.update_state(DEFAULT_THREAD, {"human_decision": decision})
-    result = app.invoke(None, config=DEFAULT_THREAD)
+    graph.update_state(DEFAULT_THREAD, {"human_decision": decision})
+    result = graph.invoke(None, config=DEFAULT_THREAD)
 
     final_msg = result["messages"][-1]
     console.print(f"\n{final_msg.content}")
 
 
-@cli.command()
+@app.command()
 def status():
     """Show current system status and recent outputs."""
     console.print(Panel("[bold]System Status[/bold]", style="blue"))
 
-    state = app.get_state(DEFAULT_THREAD)
+    state = graph.get_state(DEFAULT_THREAD)
     values = state.values if state else {}
 
     # Agent outputs
@@ -139,7 +139,7 @@ def status():
         console.print(f"\n[yellow]{len(pending)} pending action(s) awaiting approval.[/yellow]")
 
 
-@cli.command()
+@app.command()
 def schedule():
     """Show configured schedules and cron jobs."""
     console.print(Panel("[bold]Configured Schedules[/bold]", style="blue"))
@@ -162,4 +162,4 @@ def schedule():
 
 
 if __name__ == "__main__":
-    cli()
+    app()
